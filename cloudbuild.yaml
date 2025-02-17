@@ -1,0 +1,20 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/my-app:${SHORT_SHA}'
+      - '.'
+
+  # Step 2: Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '${_ARTIFACT_REGISTRY}/my-app:${SHORT_SHA}'
+
+options:
+  logging: REGIONAL_USER_OWNED_BUCKET  # Creates a new log bucket in the same region as your project
+
+substitutions:
+  _ARTIFACT_REGISTRY: 'us-central1-docker.pkg.dev/reyes-assignment2-cosc1209/angela-100989583'
