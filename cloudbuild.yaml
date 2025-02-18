@@ -1,20 +1,31 @@
 steps:
   # Step 1: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - '${_ARTIFACT_REGISTRY}/my-app:${SHORT_SHA}'
-      - '.'
+    id: 'Build Image'
+    args: ['build', '-t', 'gcr.io/$reyes-assignment2-cosc1209/my-app:$SHORT_SHA', '.']
 
-  # Step 2: Push the Docker image to Artifact Registry
+  # Step 2: Push the Docker image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Image'
+    args: ['push', 'gcr.io/$PROJECT_ID/my-app:$SHORT_SHA']
+
+  # Step 3: Deploy the Docker image to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: 'bash'
     args:
-      - 'push'
-      - '${_ARTIFACT_REGISTRY}/my-app:${SHORT_SHA}'
+      - '-c'
+      - |
+        # Authenticate with Google Cloud
+        gcloud auth activate-service-account --key-file /workspace/your-service-account-key.json
+        
+        # Deploy the image to Cloud Run
+        gcloud run deploy my-app \
+          --image gcr.io/$PROJECT_ID/my-app:$SHORT_SHA \
+          --platform managed \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --port 8080
 
-options:
-  logging: CLOUD_LOGGING_ONLY  # Use a valid logging value
-
-substitutions:
-  _ARTIFACT_REGISTRY: 'us-central1-docker.pkg.dev/reyes-assignment2-cosc1209/angela-100989583'
+images:
+  - 'gcr.io/$PROJECT_ID/my-app:$SHORT_SHA'
